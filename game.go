@@ -41,6 +41,7 @@ type Game struct {
 		y      float32 // y-offset
 		v      float32 // velocity
 		atRest bool    // is the gopher on the ground?
+		dead   bool    // is the gopher dead?
 	}
 	scroll struct {
 		x float32 // x-offset
@@ -65,6 +66,7 @@ func (g *Game) reset() {
 		g.groundY[i] = initGroundY
 	}
 	g.gopher.atRest = false
+	g.gopher.dead = false
 }
 
 func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
@@ -106,7 +108,12 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 
 	// The gopher.
 	newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
-		eng.SetSubTex(n, texs[texGopher])
+		switch {
+		case g.gopher.dead:
+			eng.SetSubTex(n, texs[texGopherDead])
+		default:
+			eng.SetSubTex(n, texs[texGopher])
+		}
 		eng.SetTransform(n, f32.Affine{
 			{tileWidth, 0, tileWidth * gopherTile},
 			{0, tileHeight, g.gopher.y},
@@ -122,6 +129,7 @@ func (a arrangerFunc) Arrange(e sprite.Engine, n *sprite.Node, t clock.Time) { a
 
 const (
 	texGopher = iota
+	texGopherDead
 	texGround
 	texEarth
 )
@@ -144,13 +152,19 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 
 	const n = 128
 	return []sprite.SubTex{
-		texGopher: sprite.SubTex{t, image.Rect(1+0, 0, n-1, n)},
-		texGround: sprite.SubTex{t, image.Rect(1+n*3, 0, n*4-1, n)},
-		texEarth:  sprite.SubTex{t, image.Rect(1+n*4, 0, n*5-1, n)},
+		texGopher:     sprite.SubTex{t, image.Rect(1+0, 0, n-1, n)},
+		texGopherDead: sprite.SubTex{t, image.Rect(1+n, 0, n*2-1, n)},
+		texGround:     sprite.SubTex{t, image.Rect(1+n*3, 0, n*4-1, n)},
+		texEarth:      sprite.SubTex{t, image.Rect(1+n*4, 0, n*5-1, n)},
 	}
 }
 
 func (g *Game) Press(down bool) {
+	if g.gopher.dead {
+		// Player can't control a dead gopher.
+		return
+	}
+
 	if down {
 		if g.gopher.atRest {
 			// Gopher may jump from the ground.
@@ -186,6 +200,13 @@ func (g *Game) calcScroll() {
 	// Create new ground tiles if we need to.
 	for g.scroll.x > tileWidth {
 		g.newGroundTile()
+
+		// Check whether the gopher has crashed.
+		// Do this for each new ground tile so that when the scroll
+		// velocity is >tileWidth/frame it can't pass through the ground.
+		if !g.gopher.dead && g.gopherCrashed() {
+			g.killGopher()
+		}
 	}
 }
 
@@ -215,6 +236,14 @@ func (g *Game) nextGroundY() float32 {
 		return (groundMax-groundMin)*rand.Float32() + groundMin
 	}
 	return prev
+}
+
+func (g *Game) gopherCrashed() bool {
+	return g.gopher.y+tileHeight > g.groundY[gopherTile+1]
+}
+
+func (g *Game) killGopher() {
+	g.gopher.dead = true
 }
 
 func (g *Game) clampToGround() {

@@ -67,11 +67,20 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 	// The ground.
 	for i := range g.groundY {
 		i := i
+		// The top of the ground.
 		newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
 			eng.SetSubTex(n, texs[texGround])
 			eng.SetTransform(n, f32.Affine{
 				{tileWidth, 0, float32(i) * tileWidth},
 				{0, tileHeight, g.groundY[i]},
+			})
+		})
+		// The earth beneath.
+		newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
+			eng.SetSubTex(n, texs[texEarth])
+			eng.SetTransform(n, f32.Affine{
+				{tileWidth, 0, float32(i) * tileWidth},
+				{0, tileHeight * tilesY, g.groundY[i] + tileHeight},
 			})
 		})
 	}
@@ -95,6 +104,7 @@ func (a arrangerFunc) Arrange(e sprite.Engine, n *sprite.Node, t clock.Time) { a
 const (
 	texGopher = iota
 	texGround
+	texEarth
 )
 
 func loadTextures(eng sprite.Engine) []sprite.SubTex {
@@ -117,6 +127,7 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 	return []sprite.SubTex{
 		texGopher: sprite.SubTex{t, image.Rect(1+0, 0, n-1, n)},
 		texGround: sprite.SubTex{t, image.Rect(1+n*3, 0, n*4-1, n)},
+		texEarth:  sprite.SubTex{t, image.Rect(1+n*4, 0, n*5-1, n)},
 	}
 }
 

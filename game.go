@@ -39,6 +39,8 @@ const (
 	groundMin        = tileHeight * (tilesY - 2*tilesY/5)
 	groundMax        = tileHeight * tilesY
 	initGroundY      = tileHeight * (tilesY - 1)
+
+	climbGrace = tileHeight / 3 // gopher won't die if it hits a cliff this high
 )
 
 type Game struct {
@@ -268,13 +270,13 @@ func (g *Game) nextGroundY() float32 {
 		return (groundMax-groundMin)*rand.Float32() + groundMin
 	}
 	if wobble := rand.Intn(groundWobbleProb) == 0; wobble {
-		return prev + (rand.Float32()-0.5)*(tileHeight/3)
+		return prev + (rand.Float32()-0.5)*climbGrace
 	}
 	return prev
 }
 
 func (g *Game) gopherCrashed() bool {
-	return g.gopher.y+tileHeight > g.groundY[gopherTile+1]
+	return g.gopher.y+tileHeight-climbGrace > g.groundY[gopherTile+1]
 }
 
 func (g *Game) killGopher() {

@@ -35,6 +35,7 @@ const (
 	deadTimeBeforeReset = 240   // how long to wait before restarting the game
 
 	groundChangeProb = 5 // 1/probability of ground height change
+	groundWobbleProb = 3 // 1/probability of minor ground height change
 	groundMin        = tileHeight * (tilesY - 2*tilesY/5)
 	groundMax        = tileHeight * tilesY
 	initGroundY      = tileHeight * (tilesY - 1)
@@ -265,6 +266,9 @@ func (g *Game) nextGroundY() float32 {
 	prev := g.groundY[len(g.groundY)-1]
 	if change := rand.Intn(groundChangeProb) == 0; change {
 		return (groundMax-groundMin)*rand.Float32() + groundMin
+	}
+	if wobble := rand.Intn(groundWobbleProb) == 0; wobble {
+		return prev + (rand.Float32()-0.5)*(tileHeight/3)
 	}
 	return prev
 }

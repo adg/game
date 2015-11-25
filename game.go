@@ -25,6 +25,9 @@ const (
 
 	gopherTile = 1 // which tile the gopher is standing on (0-indexed)
 
+	initScrollV = 1     // initial scroll velocity
+	scrollA     = 0.001 // scroll accelleration
+
 	groundChangeProb = 5 // 1/probability of ground height change
 	groundMin        = tileHeight * (tilesY - 2*tilesY/5)
 	groundMax        = tileHeight * tilesY
@@ -32,6 +35,10 @@ const (
 )
 
 type Game struct {
+	scroll struct {
+		x float32 // x-offset
+		v float32 // velocity
+	}
 	groundY  [tilesX + 3]float32 // ground y-offsets
 	lastCalc clock.Time          // when we last calculated a frame
 }
@@ -43,6 +50,8 @@ func NewGame() *Game {
 }
 
 func (g *Game) reset() {
+	g.scroll.x = 0
+	g.scroll.v = initScrollV
 	for i := range g.groundY {
 		g.groundY[i] = initGroundY
 	}
@@ -71,7 +80,7 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 		newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
 			eng.SetSubTex(n, texs[texGround])
 			eng.SetTransform(n, f32.Affine{
-				{tileWidth, 0, float32(i) * tileWidth},
+				{tileWidth, 0, float32(i)*tileWidth - g.scroll.x},
 				{0, tileHeight, g.groundY[i]},
 			})
 		})
@@ -79,7 +88,7 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 		newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
 			eng.SetSubTex(n, texs[texEarth])
 			eng.SetTransform(n, f32.Affine{
-				{tileWidth, 0, float32(i) * tileWidth},
+				{tileWidth, 0, float32(i)*tileWidth - g.scroll.x},
 				{0, tileHeight * tilesY, g.groundY[i] + tileHeight},
 			})
 		})
@@ -143,8 +152,14 @@ func (g *Game) calcFrame() {
 }
 
 func (g *Game) calcScroll() {
-	// Create new ground tiles 3 times a second.
-	if g.lastCalc%20 == 0 {
+	// Compute velocity.
+	g.scroll.v += scrollA
+
+	// Compute offset.
+	g.scroll.x += g.scroll.v
+
+	// Create new ground tiles if we need to.
+	for g.scroll.x > tileWidth {
 		g.newGroundTile()
 	}
 }
@@ -154,6 +169,7 @@ func (g *Game) newGroundTile() {
 	next := g.nextGroundY()
 
 	// Shift ground tiles to the left.
+	g.scroll.x -= tileWidth
 	copy(g.groundY[:], g.groundY[1:])
 	g.groundY[len(g.groundY)-1] = next
 }

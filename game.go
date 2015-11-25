@@ -30,7 +30,8 @@ const (
 	gravity     = 0.1   // gravity
 	jumpV       = -5    // jump velocity
 
-	deadScrollA = -0.01 // scroll decelleration after the gopher dies
+	deadScrollA         = -0.01 // scroll decelleration after the gopher dies
+	deadTimeBeforeReset = 240   // how long to wait before restarting the game
 
 	groundChangeProb = 5 // 1/probability of ground height change
 	groundMin        = tileHeight * (tilesY - 2*tilesY/5)
@@ -40,10 +41,11 @@ const (
 
 type Game struct {
 	gopher struct {
-		y      float32 // y-offset
-		v      float32 // velocity
-		atRest bool    // is the gopher on the ground?
-		dead   bool    // is the gopher dead?
+		y        float32    // y-offset
+		v        float32    // velocity
+		atRest   bool       // is the gopher on the ground?
+		dead     bool       // is the gopher dead?
+		deadTime clock.Time // when the gopher died
 	}
 	scroll struct {
 		x float32 // x-offset
@@ -69,6 +71,7 @@ func (g *Game) reset() {
 	}
 	g.gopher.atRest = false
 	g.gopher.dead = false
+	g.gopher.deadTime = 0
 }
 
 func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
@@ -181,6 +184,11 @@ func (g *Game) Press(down bool) {
 }
 
 func (g *Game) Update(now clock.Time) {
+	if g.gopher.dead && now-g.gopher.deadTime > deadTimeBeforeReset {
+		// Restart if the gopher has been dead for a while.
+		g.reset()
+	}
+
 	// Compute game states up to now.
 	for ; g.lastCalc < now; g.lastCalc++ {
 		g.calcFrame()
@@ -255,6 +263,7 @@ func (g *Game) gopherCrashed() bool {
 
 func (g *Game) killGopher() {
 	g.gopher.dead = true
+	g.gopher.deadTime = g.lastCalc
 	g.gopher.v = jumpV // Bounce off screen.
 }
 

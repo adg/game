@@ -30,6 +30,8 @@ const (
 	gravity     = 0.1   // gravity
 	jumpV       = -5    // jump velocity
 
+	deadScrollA = -0.01 // scroll decelleration after the gopher dies
+
 	groundChangeProb = 5 // 1/probability of ground height change
 	groundMin        = tileHeight * (tilesY - 2*tilesY/5)
 	groundMax        = tileHeight * tilesY
@@ -192,7 +194,16 @@ func (g *Game) calcFrame() {
 
 func (g *Game) calcScroll() {
 	// Compute velocity.
-	g.scroll.v += scrollA
+	if g.gopher.dead {
+		// Decrease scroll speed when the gopher dies.
+		g.scroll.v += deadScrollA
+		if g.scroll.v < 0 {
+			g.scroll.v = 0
+		}
+	} else {
+		// Increase scroll speed.
+		g.scroll.v += scrollA
+	}
 
 	// Compute offset.
 	g.scroll.x += g.scroll.v

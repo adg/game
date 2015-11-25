@@ -38,8 +38,9 @@ const (
 
 type Game struct {
 	gopher struct {
-		y float32 // y-offset
-		v float32 // velocity
+		y      float32 // y-offset
+		v      float32 // velocity
+		atRest bool    // is the gopher on the ground?
 	}
 	scroll struct {
 		x float32 // x-offset
@@ -63,6 +64,7 @@ func (g *Game) reset() {
 	for i := range g.groundY {
 		g.groundY[i] = initGroundY
 	}
+	g.gopher.atRest = false
 }
 
 func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
@@ -150,8 +152,10 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 
 func (g *Game) Press(down bool) {
 	if down {
-		// Make the gopher jump.
-		g.gopher.v = jumpV
+		if g.gopher.atRest {
+			// Gopher may jump from the ground.
+			g.gopher.v = jumpV
+		}
 	} else {
 		// Stop gopher rising on button release.
 		if g.gopher.v < 0 {
@@ -222,8 +226,10 @@ func (g *Game) clampToGround() {
 
 	// Prevent the gopher from falling through the ground.
 	maxGopherY := minY - tileHeight
+	g.gopher.atRest = false
 	if g.gopher.y >= maxGopherY {
 		g.gopher.v = 0
 		g.gopher.y = maxGopherY
+		g.gopher.atRest = true
 	}
 }

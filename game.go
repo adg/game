@@ -27,6 +27,7 @@ const (
 
 	initScrollV = 1     // initial scroll velocity
 	scrollA     = 0.001 // scroll accelleration
+	gravity     = 0.1   // gravity
 
 	groundChangeProb = 5 // 1/probability of ground height change
 	groundMin        = tileHeight * (tilesY - 2*tilesY/5)
@@ -35,6 +36,10 @@ const (
 )
 
 type Game struct {
+	gopher struct {
+		y float32 // y-offset
+		v float32 // velocity
+	}
 	scroll struct {
 		x float32 // x-offset
 		v float32 // velocity
@@ -50,6 +55,8 @@ func NewGame() *Game {
 }
 
 func (g *Game) reset() {
+	g.gopher.y = 0
+	g.gopher.v = 0
 	g.scroll.x = 0
 	g.scroll.v = initScrollV
 	for i := range g.groundY {
@@ -99,7 +106,7 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 		eng.SetSubTex(n, texs[texGopher])
 		eng.SetTransform(n, f32.Affine{
 			{tileWidth, 0, tileWidth * gopherTile},
-			{0, tileHeight, 0},
+			{0, tileHeight, g.gopher.y},
 		})
 	})
 
@@ -149,6 +156,7 @@ func (g *Game) Update(now clock.Time) {
 
 func (g *Game) calcFrame() {
 	g.calcScroll()
+	g.calcGopher()
 }
 
 func (g *Game) calcScroll() {
@@ -162,6 +170,14 @@ func (g *Game) calcScroll() {
 	for g.scroll.x > tileWidth {
 		g.newGroundTile()
 	}
+}
+
+func (g *Game) calcGopher() {
+	// Compute velocity.
+	g.gopher.v += gravity
+
+	// Compute offset.
+	g.gopher.y += g.gopher.v
 }
 
 func (g *Game) newGroundTile() {

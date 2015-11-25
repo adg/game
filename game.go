@@ -244,9 +244,15 @@ func (g *Game) gopherCrashed() bool {
 
 func (g *Game) killGopher() {
 	g.gopher.dead = true
+	g.gopher.v = jumpV // Bounce off screen.
 }
 
 func (g *Game) clampToGround() {
+	if g.gopher.dead {
+		// Allow the gopher to fall through ground when dead.
+		return
+	}
+
 	// Compute the minimum offset of the ground beneath the gopher.
 	minY := g.groundY[gopherTile]
 	if y := g.groundY[gopherTile+1]; y < minY {

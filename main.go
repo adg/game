@@ -13,7 +13,6 @@ import (
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
-	"golang.org/x/mobile/exp/f32"
 	"golang.org/x/mobile/exp/gl/glutil"
 	"golang.org/x/mobile/exp/sprite"
 	"golang.org/x/mobile/exp/sprite/clock"
@@ -58,22 +57,20 @@ var (
 	images    *glutil.Images
 	eng       sprite.Engine
 	scene     *sprite.Node
+	game      *Game
 )
 
 func onStart(glctx gl.Context) {
 	images = glutil.NewImages(glctx)
 	eng = glsprite.Engine(images)
-	scene = &sprite.Node{}
-	eng.Register(scene)
-	eng.SetTransform(scene, f32.Affine{
-		{1, 0, 0},
-		{0, 1, 0},
-	})
+	game = NewGame()
+	scene = game.Scene(eng)
 }
 
 func onStop() {
 	eng.Release()
 	images.Release()
+	game = nil
 }
 
 func onPaint(glctx gl.Context, sz size.Event) {

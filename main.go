@@ -7,6 +7,7 @@
 package main
 
 import (
+	"math/rand"
 	"time"
 
 	"golang.org/x/mobile/app"
@@ -21,6 +22,8 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	app.Main(func(a app.App) {
 		var glctx gl.Context
 		var sz size.Event

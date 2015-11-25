@@ -29,6 +29,7 @@ const (
 	scrollA     = 0.001 // scroll accelleration
 	gravity     = 0.1   // gravity
 	jumpV       = -5    // jump velocity
+	flapV       = -1.5  // flap velocity
 
 	deadScrollA         = -0.01 // scroll decelleration after the gopher dies
 	deadTimeBeforeReset = 240   // how long to wait before restarting the game
@@ -44,6 +45,7 @@ type Game struct {
 		y        float32    // y-offset
 		v        float32    // velocity
 		atRest   bool       // is the gopher on the ground?
+		flapped  bool       // has the gopher flapped since it became airborne?
 		dead     bool       // is the gopher dead?
 		deadTime clock.Time // when the gopher died
 	}
@@ -70,6 +72,7 @@ func (g *Game) reset() {
 		g.groundY[i] = initGroundY
 	}
 	g.gopher.atRest = false
+	g.gopher.flapped = false
 	g.gopher.dead = false
 	g.gopher.deadTime = 0
 }
@@ -116,6 +119,8 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 		switch {
 		case g.gopher.dead:
 			eng.SetSubTex(n, texs[texGopherDead])
+		case g.gopher.v < 0:
+			eng.SetSubTex(n, texs[texGopherFlap])
 		default:
 			eng.SetSubTex(n, texs[texGopher])
 		}
@@ -135,6 +140,7 @@ func (a arrangerFunc) Arrange(e sprite.Engine, n *sprite.Node, t clock.Time) { a
 const (
 	texGopher = iota
 	texGopherDead
+	texGopherFlap
 	texGround
 	texEarth
 )
@@ -159,6 +165,7 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 	return []sprite.SubTex{
 		texGopher:     sprite.SubTex{t, image.Rect(1+0, 0, n-1, n)},
 		texGopherDead: sprite.SubTex{t, image.Rect(1+n, 0, n*2-1, n)},
+		texGopherFlap: sprite.SubTex{t, image.Rect(1+n*2, 0, n*3-1, n)},
 		texGround:     sprite.SubTex{t, image.Rect(1+n*3, 0, n*4-1, n)},
 		texEarth:      sprite.SubTex{t, image.Rect(1+n*4, 0, n*5-1, n)},
 	}
@@ -171,9 +178,14 @@ func (g *Game) Press(down bool) {
 	}
 
 	if down {
-		if g.gopher.atRest {
+		switch {
+		case g.gopher.atRest:
 			// Gopher may jump from the ground.
 			g.gopher.v = jumpV
+		case !g.gopher.flapped:
+			// Gopher may flap once in mid-air.
+			g.gopher.flapped = true
+			g.gopher.v = flapV
 		}
 	} else {
 		// Stop gopher rising on button release.
@@ -286,5 +298,6 @@ func (g *Game) clampToGround() {
 		g.gopher.v = 0
 		g.gopher.y = maxGopherY
 		g.gopher.atRest = true
+		g.gopher.flapped = false
 	}
 }

@@ -23,14 +23,24 @@ const (
 	tilesX, tilesY        = 16, 16 // number of horizontal tiles
 
 	gopherTile = 1 // which tile the gopher is standing on (0-indexed)
+
+	initGroundY = tileHeight * (tilesY - 1)
 )
 
 type Game struct {
+	groundY [tilesX + 3]float32 // ground y-offsets
 }
 
 func NewGame() *Game {
 	var g Game
+	g.reset()
 	return &g
+}
+
+func (g *Game) reset() {
+	for i := range g.groundY {
+		g.groundY[i] = initGroundY
+	}
 }
 
 func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
@@ -47,6 +57,18 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 		n := &sprite.Node{Arranger: arrangerFunc(fn)}
 		eng.Register(n)
 		scene.AppendChild(n)
+	}
+
+	// The ground.
+	for i := range g.groundY {
+		i := i
+		newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
+			eng.SetSubTex(n, texs[texGround])
+			eng.SetTransform(n, f32.Affine{
+				{tileWidth, 0, float32(i) * tileWidth},
+				{0, tileHeight, g.groundY[i]},
+			})
+		})
 	}
 
 	// The gopher.
@@ -67,6 +89,7 @@ func (a arrangerFunc) Arrange(e sprite.Engine, n *sprite.Node, t clock.Time) { a
 
 const (
 	texGopher = iota
+	texGround
 )
 
 func loadTextures(eng sprite.Engine) []sprite.SubTex {
@@ -88,5 +111,6 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 	const n = 128
 	return []sprite.SubTex{
 		texGopher: sprite.SubTex{t, image.Rect(1+0, 0, n-1, n)},
+		texGround: sprite.SubTex{t, image.Rect(1+n*3, 0, n*4-1, n)},
 	}
 }

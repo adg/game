@@ -28,6 +28,7 @@ const (
 	initScrollV = 1     // initial scroll velocity
 	scrollA     = 0.001 // scroll accelleration
 	gravity     = 0.1   // gravity
+	jumpV       = -5    // jump velocity
 
 	groundChangeProb = 5 // 1/probability of ground height change
 	groundMin        = tileHeight * (tilesY - 2*tilesY/5)
@@ -144,6 +145,18 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 		texGopher: sprite.SubTex{t, image.Rect(1+0, 0, n-1, n)},
 		texGround: sprite.SubTex{t, image.Rect(1+n*3, 0, n*4-1, n)},
 		texEarth:  sprite.SubTex{t, image.Rect(1+n*4, 0, n*5-1, n)},
+	}
+}
+
+func (g *Game) Press(down bool) {
+	if down {
+		// Make the gopher jump.
+		g.gopher.v = jumpV
+	} else {
+		// Stop gopher rising on button release.
+		if g.gopher.v < 0 {
+			g.gopher.v = 0
+		}
 	}
 }
 

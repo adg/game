@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"golang.org/x/mobile/app"
+	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
+	"golang.org/x/mobile/event/touch"
 	"golang.org/x/mobile/exp/gl/glutil"
 	"golang.org/x/mobile/exp/sprite"
 	"golang.org/x/mobile/exp/sprite/clock"
@@ -50,6 +52,17 @@ func main() {
 				onPaint(glctx, sz)
 				a.Publish()
 				a.Send(paint.Event{}) // keep animating
+			case touch.Event:
+				if down := e.Type == touch.TypeBegin; down || e.Type == touch.TypeEnd {
+					game.Press(down)
+				}
+			case key.Event:
+				if e.Code != key.CodeSpacebar {
+					break
+				}
+				if down := e.Direction == key.DirPress; down || e.Direction == key.DirRelease {
+					game.Press(down)
+				}
 			}
 		}
 	})

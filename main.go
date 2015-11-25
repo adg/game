@@ -77,5 +77,6 @@ func onPaint(glctx gl.Context, sz size.Event) {
 	glctx.ClearColor(1, 1, 1, 1)
 	glctx.Clear(gl.COLOR_BUFFER_BIT)
 	now := clock.Time(time.Since(startTime) * 60 / time.Second)
+	game.Update(now)
 	eng.Render(scene, now, sz)
 }

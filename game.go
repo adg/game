@@ -28,7 +28,8 @@ const (
 )
 
 type Game struct {
-	groundY [tilesX + 3]float32 // ground y-offsets
+	groundY  [tilesX + 3]float32 // ground y-offsets
+	lastCalc clock.Time          // when we last calculated a frame
 }
 
 func NewGame() *Game {
@@ -113,4 +114,15 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 		texGopher: sprite.SubTex{t, image.Rect(1+0, 0, n-1, n)},
 		texGround: sprite.SubTex{t, image.Rect(1+n*3, 0, n*4-1, n)},
 	}
+}
+
+func (g *Game) Update(now clock.Time) {
+	// Compute game states up to now.
+	for ; g.lastCalc < now; g.lastCalc++ {
+		g.calcFrame()
+	}
+}
+
+func (g *Game) calcFrame() {
+	// calculate state for next frame
 }

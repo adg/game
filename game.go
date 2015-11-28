@@ -121,14 +121,18 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 
 	// The gopher.
 	newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
+		var x int
 		switch {
 		case g.gopher.dead:
-			eng.SetSubTex(n, texs[texGopherDead])
+			x = frame(t, 16, texGopherDead1, texGopherDead2)
 		case g.gopher.v < 0:
-			eng.SetSubTex(n, texs[texGopherFlap])
+			x = frame(t, 4, texGopherFlap1, texGopherFlap2)
+		case g.gopher.atRest:
+			x = frame(t, 4, texGopherRun1, texGopherRun2)
 		default:
-			eng.SetSubTex(n, texs[texGopher])
+			x = frame(t, 8, texGopherRun1, texGopherRun2)
 		}
+		eng.SetSubTex(n, texs[x])
 		eng.SetTransform(n, f32.Affine{
 			{tileWidth * 2, 0, tileWidth*(gopherTile-1) + tileWidth/8},
 			{0, tileHeight * 2, g.gopher.y - tileHeight + tileHeight/4},
@@ -138,14 +142,24 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 	return scene
 }
 
+// frame returns the frame for the given time t
+// when each frame is displayed for duration d.
+func frame(t, d clock.Time, frames ...int) int {
+	total := int(d) * len(frames)
+	return frames[(int(t)%total)/int(d)]
+}
+
 type arrangerFunc func(e sprite.Engine, n *sprite.Node, t clock.Time)
 
 func (a arrangerFunc) Arrange(e sprite.Engine, n *sprite.Node, t clock.Time) { a(e, n, t) }
 
 const (
-	texGopher = iota
-	texGopherDead
-	texGopherFlap
+	texGopherRun1 = iota
+	texGopherRun2
+	texGopherFlap1
+	texGopherFlap2
+	texGopherDead1
+	texGopherDead2
 	texGround1
 	texGround2
 	texGround3
@@ -175,14 +189,17 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 
 	const n = 128
 	return []sprite.SubTex{
-		texGopher:     sprite.SubTex{t, image.Rect(n*0, 0, n*1, n)},
-		texGopherFlap: sprite.SubTex{t, image.Rect(n*2, 0, n*3, n)},
-		texGopherDead: sprite.SubTex{t, image.Rect(n*4, 0, n*5, n)},
-		texGround1:    sprite.SubTex{t, image.Rect(n*6+1, 0, n*7-1, n)},
-		texGround2:    sprite.SubTex{t, image.Rect(n*7+1, 0, n*8-1, n)},
-		texGround3:    sprite.SubTex{t, image.Rect(n*8+1, 0, n*9-1, n)},
-		texGround4:    sprite.SubTex{t, image.Rect(n*9+1, 0, n*10-1, n)},
-		texEarth:      sprite.SubTex{t, image.Rect(n*10+1, 0, n*11-1, n)},
+		texGopherRun1:  sprite.SubTex{t, image.Rect(n*0, 0, n*1, n)},
+		texGopherRun2:  sprite.SubTex{t, image.Rect(n*1, 0, n*2, n)},
+		texGopherFlap1: sprite.SubTex{t, image.Rect(n*2, 0, n*3, n)},
+		texGopherFlap2: sprite.SubTex{t, image.Rect(n*3, 0, n*4, n)},
+		texGopherDead1: sprite.SubTex{t, image.Rect(n*4, 0, n*5, n)},
+		texGopherDead2: sprite.SubTex{t, image.Rect(n*5, 0, n*6-1, n)},
+		texGround1:     sprite.SubTex{t, image.Rect(n*6+1, 0, n*7-1, n)},
+		texGround2:     sprite.SubTex{t, image.Rect(n*7+1, 0, n*8-1, n)},
+		texGround3:     sprite.SubTex{t, image.Rect(n*8+1, 0, n*9-1, n)},
+		texGround4:     sprite.SubTex{t, image.Rect(n*9+1, 0, n*10-1, n)},
+		texEarth:       sprite.SubTex{t, image.Rect(n*10+1, 0, n*11-1, n)},
 	}
 }
 

@@ -56,8 +56,9 @@ type Game struct {
 		x float32 // x-offset
 		v float32 // velocity
 	}
-	groundY  [tilesX + 3]float32 // ground y-offsets
-	lastCalc clock.Time          // when we last calculated a frame
+	groundY   [tilesX + 3]float32 // ground y-offsets
+	groundTex [tilesX + 3]int     // ground texture
+	lastCalc  clock.Time          // when we last calculated a frame
 }
 
 func NewGame() *Game {
@@ -73,6 +74,7 @@ func (g *Game) reset() {
 	g.scroll.v = initScrollV
 	for i := range g.groundY {
 		g.groundY[i] = initGroundY
+		g.groundTex[i] = randomGroundTexture()
 	}
 	g.gopher.atRest = false
 	g.gopher.flapped = false
@@ -101,7 +103,7 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 		i := i
 		// The top of the ground.
 		newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
-			eng.SetSubTex(n, texs[texGround])
+			eng.SetSubTex(n, texs[g.groundTex[i]])
 			eng.SetTransform(n, f32.Affine{
 				{tileWidth, 0, float32(i)*tileWidth - g.scroll.x},
 				{0, tileHeight, g.groundY[i]},
@@ -144,9 +146,16 @@ const (
 	texGopher = iota
 	texGopherDead
 	texGopherFlap
-	texGround
+	texGround1
+	texGround2
+	texGround3
+	texGround4
 	texEarth
 )
+
+func randomGroundTexture() int {
+	return texGround1 + rand.Intn(4)
+}
 
 func loadTextures(eng sprite.Engine) []sprite.SubTex {
 	a, err := asset.Open("sprite.png")
@@ -169,7 +178,10 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 		texGopher:     sprite.SubTex{t, image.Rect(n*0, 0, n*1, n)},
 		texGopherFlap: sprite.SubTex{t, image.Rect(n*2, 0, n*3, n)},
 		texGopherDead: sprite.SubTex{t, image.Rect(n*4, 0, n*5, n)},
-		texGround:     sprite.SubTex{t, image.Rect(n*6+1, 0, n*7-1, n)},
+		texGround1:    sprite.SubTex{t, image.Rect(n*6+1, 0, n*7-1, n)},
+		texGround2:    sprite.SubTex{t, image.Rect(n*7+1, 0, n*8-1, n)},
+		texGround3:    sprite.SubTex{t, image.Rect(n*8+1, 0, n*9-1, n)},
+		texGround4:    sprite.SubTex{t, image.Rect(n*9+1, 0, n*10-1, n)},
 		texEarth:      sprite.SubTex{t, image.Rect(n*10+1, 0, n*11-1, n)},
 	}
 }
@@ -257,11 +269,15 @@ func (g *Game) calcGopher() {
 func (g *Game) newGroundTile() {
 	// Compute next ground y-offset.
 	next := g.nextGroundY()
+	nextTex := randomGroundTexture()
 
 	// Shift ground tiles to the left.
 	g.scroll.x -= tileWidth
 	copy(g.groundY[:], g.groundY[1:])
-	g.groundY[len(g.groundY)-1] = next
+	copy(g.groundTex[:], g.groundTex[1:])
+	last := len(g.groundY) - 1
+	g.groundY[last] = next
+	g.groundTex[last] = nextTex
 }
 
 func (g *Game) nextGroundY() float32 {

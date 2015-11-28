@@ -128,8 +128,8 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 			eng.SetSubTex(n, texs[texGopher])
 		}
 		eng.SetTransform(n, f32.Affine{
-			{tileWidth, 0, tileWidth * gopherTile},
-			{0, tileHeight, g.gopher.y},
+			{tileWidth * 2, 0, tileWidth*(gopherTile-1) + tileWidth/8},
+			{0, tileHeight * 2, g.gopher.y - tileHeight + tileHeight/4},
 		})
 	})
 

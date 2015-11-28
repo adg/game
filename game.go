@@ -149,7 +149,7 @@ const (
 )
 
 func loadTextures(eng sprite.Engine) []sprite.SubTex {
-	a, err := asset.Open("placeholder-sprites.png")
+	a, err := asset.Open("sprite.png")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -166,11 +166,11 @@ func loadTextures(eng sprite.Engine) []sprite.SubTex {
 
 	const n = 128
 	return []sprite.SubTex{
-		texGopher:     sprite.SubTex{t, image.Rect(1+0, 0, n-1, n)},
-		texGopherDead: sprite.SubTex{t, image.Rect(1+n, 0, n*2-1, n)},
-		texGopherFlap: sprite.SubTex{t, image.Rect(1+n*2, 0, n*3-1, n)},
-		texGround:     sprite.SubTex{t, image.Rect(1+n*3, 0, n*4-1, n)},
-		texEarth:      sprite.SubTex{t, image.Rect(1+n*4, 0, n*5-1, n)},
+		texGopher:     sprite.SubTex{t, image.Rect(n*0, 0, n*1, n)},
+		texGopherFlap: sprite.SubTex{t, image.Rect(n*2, 0, n*3, n)},
+		texGopherDead: sprite.SubTex{t, image.Rect(n*4, 0, n*5, n)},
+		texGround:     sprite.SubTex{t, image.Rect(n*6+1, 0, n*7-1, n)},
+		texEarth:      sprite.SubTex{t, image.Rect(n*10+1, 0, n*11-1, n)},
 	}
 }
 

@@ -9,6 +9,7 @@ package main
 import (
 	"image"
 	"log"
+	"math"
 	"math/rand"
 
 	_ "image/png"
@@ -121,10 +122,15 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 
 	// The gopher.
 	newNode(func(eng sprite.Engine, n *sprite.Node, t clock.Time) {
+		a := f32.Affine{
+			{tileWidth * 2, 0, tileWidth*(gopherTile-1) + tileWidth/8},
+			{0, tileHeight * 2, g.gopher.y - tileHeight + tileHeight/4},
+		}
 		var x int
 		switch {
 		case g.gopher.dead:
 			x = frame(t, 16, texGopherDead1, texGopherDead2)
+			animateDeadGopher(&a, t-g.gopher.deadTime)
 		case g.gopher.v < 0:
 			x = frame(t, 4, texGopherFlap1, texGopherFlap2)
 		case g.gopher.atRest:
@@ -133,10 +139,7 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 			x = frame(t, 8, texGopherRun1, texGopherRun2)
 		}
 		eng.SetSubTex(n, texs[x])
-		eng.SetTransform(n, f32.Affine{
-			{tileWidth * 2, 0, tileWidth*(gopherTile-1) + tileWidth/8},
-			{0, tileHeight * 2, g.gopher.y - tileHeight + tileHeight/4},
-		})
+		eng.SetTransform(n, a)
 	})
 
 	return scene
@@ -147,6 +150,14 @@ func (g *Game) Scene(eng sprite.Engine) *sprite.Node {
 func frame(t, d clock.Time, frames ...int) int {
 	total := int(d) * len(frames)
 	return frames[(int(t)%total)/int(d)]
+}
+
+func animateDeadGopher(a *f32.Affine, t clock.Time) {
+	dt := float32(t)
+	a.Scale(a, 1+dt/20, 1+dt/20)
+	a.Translate(a, 0.5, 0.5)
+	a.Rotate(a, dt/math.Pi/-8)
+	a.Translate(a, -0.5, -0.5)
 }
 
 type arrangerFunc func(e sprite.Engine, n *sprite.Node, t clock.Time)
@@ -315,7 +326,7 @@ func (g *Game) gopherCrashed() bool {
 func (g *Game) killGopher() {
 	g.gopher.dead = true
 	g.gopher.deadTime = g.lastCalc
-	g.gopher.v = jumpV // Bounce off screen.
+	g.gopher.v = jumpV * 1.5 // Bounce off screen.
 }
 
 func (g *Game) clampToGround() {

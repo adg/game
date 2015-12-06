@@ -1,0 +1,12 @@
+This is an example game 'Flappy Gopher' that was
+written for my keynote at GoCon Tokyo Winter 2016.
+
+The git history shows the step-by-step development of the game.
+When I gave the keynote, I demonstrated this using the dt tool.
+See https://github.com/adg/dt/.
+
+The sprites were created by Renee French and are distributed
+under the Creative Commons Attributions 3.0 license. 
+
+- Andrew Gerrand <adg@golang.org>
+  6 Dec 2015

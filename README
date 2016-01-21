@@ -1,6 +1,9 @@
 This is an example game 'Flappy Gopher' that was
 written for my keynote at GoCon Tokyo Winter 2015.
 
+This game is now an official example in the x/mobile repository.
+Its canonical location is golang.org/x/mobile/example/flappy (use 'go get').
+
 The git history shows the step-by-step development of the game.
 When I gave the keynote, I demonstrated this using the dt tool.
 See https://github.com/adg/dt/.

@@ -81,6 +81,8 @@ func onStart(glctx gl.Context) {
 	eng = glsprite.Engine(images)
 	game = NewGame()
 	scene = game.Scene(eng)
+	glctx.Enable(gl.BLEND)
+	glctx.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 }
 
 func onStop() {
